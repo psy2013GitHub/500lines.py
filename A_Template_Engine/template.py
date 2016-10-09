@@ -37,7 +37,6 @@ class Template:
 
         buffer = []
         def flush_buffer():
-            print 'code.indent_level:', code.indent_level, ' buffer:', buffer
             if len(buffer) > 1:
                 code.add_line("extend_res([%s,])" % ','.join(buffer))
             elif len(buffer)==1:
@@ -47,7 +46,6 @@ class Template:
         # template_str parser
         control_stack = [] # control loop
         for token in [_.strip() for _ in token_matcher.split(template_str) if _]:
-            print 'token:', token
             if token.startswith('{% end'):
                 flush_buffer() # caution
                 end_sgn = token.split()[1][3:] # fixme
@@ -68,9 +66,7 @@ class Template:
                     self.add_var(iter_var, self.loop_vars)
                     tmp = "for c_%s in %s:" % (iter_var, loop_var)
                     code.add_line(tmp)
-                    print 'code.indent_level 1:', code.indent_level
                     code.indent()
-                    print 'code.indent_level 2:', code.indent_level
 
             elif token.startswith('{#'): # 注释
                 continue
@@ -81,7 +77,6 @@ class Template:
                 else:
                     buffer.append('%s' % repr(token))
 
-        print 'final flush_buffer:'
         flush_buffer()
 
         for var in self.all_vars - self.loop_vars:
