@@ -41,7 +41,7 @@ class Template:
             if len(buffer) > 1:
                 code.add_line("extend_res([%s,])" % ','.join(buffer))
             elif len(buffer)==1:
-                code.add_line("append_res(%s)" % repr(buffer[0]))
+                code.add_line("append_res(%s)" % buffer[0]) #repr(buffer[0]))
             del buffer[:]
 
         # template_str parser
@@ -102,18 +102,22 @@ class Template:
         '''
         code = ''
         var_str = var_str.strip()
-        if '.' in var_str:
+        if '|' in var_str:
+            tmp = var_str.split('|')
+            var = tmp[0]
+            code = self.get_var(var)
+            for f in tmp[1:]:
+                code = 'c_%s(%s)' % (f, code)
+                self.add_var(f, self.all_vars)
+        elif '.' in var_str:
             tmp = var_str.split('.')
             var = tmp[0]
             code = 'do_dots(c_%s, *%s)' % (tmp[0], tmp[1:])
-        elif '|' in var_str:
-            tmp = var_str.split('|')
-            var = tmp[0]
-            code = 'do_dots(c_%s, *%s)' % (tmp[0], tmp[1:])
+            self.add_var(var, self.all_vars)
         else:
             var = var_str
             code = 'c_%s' % var_str
-        self.add_var(var, self.all_vars)
+            self.add_var(var, self.all_vars)
         return code
 
     def add_var(self, var, target_set):
@@ -174,7 +178,7 @@ if __name__ == '__main__':
     '''
 
     # testReSplit()
-    template = Template(html, {'user_name':'lilian', 'product_list':[{'name':'durex', 'price':20, 'format_price':30}]})
+    template = Template(html)
     print 'rendered text'
-    print ''.join(template.render({'user_name':'lilian', 'product_list':[{'name':'durex', 'price':20, 'format_price':30},]}))
+    print ''.join(template.render({'user_name':'lilian', 'product_list':[{'name':'durex', 'price':20, },], 'format_price':lambda x:'%f'%x}))
 
