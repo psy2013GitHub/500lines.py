@@ -174,6 +174,6 @@ if __name__ == '__main__':
 
     # testReSplit()
     template = Template(html)
-    print 'rendered text'
+    print '\n\nrendered text'
     print ''.join(template.render({'user_name':'lilian', 'product_list':[{'name':'durex', 'price':20, },], 'format_price':lambda x:'%f'%x}))
 
