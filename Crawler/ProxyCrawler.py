@@ -30,10 +30,15 @@ class ProxyCrawler:
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.agents = []
         self.agents = set()
+        self.root = 'www.xicidaili.com'
+        self.headers = {
+                'User-Agent':'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25',
+                'Host':self.root,
+                'Referer':'http://www.xicidaili.com/n'
+            }
 
     def init_urls(self):
         for page in range(1, 101):
-            # self.Q.put_nowait(('http://www.xicidaili.com/nn/%s' % page, 1))
             self.Q.put_nowait(('http://www.xicidaili.com/nn/%d' % page, 1))
 
 
@@ -42,14 +47,9 @@ class ProxyCrawler:
         # url, max_redirects = yield from self.Q.get()
         print(url, max_redirects)
         try:
-            headers={
-                'User-Agent':'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25',
-                'Host':'www.xicidaili.com',
-                'Referer':'http://www.xicidaili.com/n'
-            }
             proxy = "http://171.38.188.172:8123"
             response = yield from self.session.get(
-                    url, proxy=proxy, allow_redirects=False, headers=headers)
+                    url, allow_redirects=False, headers=self.headers)
         except aiohttp.ClientError as client_error:
             exception = client_error
             LOGGER.error(client_error)
@@ -117,6 +117,7 @@ class ProxyCrawler:
         try:
             while True:
                 url, max_redirects = yield from self.Q.get()
+                yield from asyncio.sleep(0.1)
                 yield from self.fetch(url, max_redirects)
                 self.Q.task_done()
         except asyncio.CancelledError:
@@ -131,6 +132,12 @@ class ProxyCrawler:
         self.t1 = time.time()
         for w in workers:
             w.cancel()
+
+    @asyncio.coroutine
+    def update_cookie(self):
+        yield from self.session.get(
+                    self.root, allow_redirects=False, headers=self.headers)
+        cookies = self.session._cookie_jar
 
     def close(self):
         """Close resources."""
